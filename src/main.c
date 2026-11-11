@@ -222,6 +222,16 @@ static int run_lines(char *const argv[], void (*cb)(const char *, void *), void 
     return (st & 0x7f) == 0 ? (st >> 8) & 0xff : -1;
 }
 
+static char *TOK_;
+static char *strtok_r_(char *str) {   /* split on newlines, in place */
+    if (str) TOK_ = str;
+    while (TOK_ && *TOK_ == '\n') TOK_++;
+    if (!TOK_ || !*TOK_) return 0;
+    char *start = TOK_, *nl = strchr(TOK_, '\n');
+    if (nl) { *nl = 0; TOK_ = nl + 1; } else TOK_ = 0;
+    return start;
+}
+
 static long long file_size(const char *p) {
     FILE *f = fopen(p, "rb"); if (!f) return -1;
     fseeko(f, 0, 2); long long n = ftello(f); fclose(f); return n;
@@ -640,6 +650,49 @@ static void on_ytdlp_line(const char *line, void *ctx) {
     }
 }
 
+/* YouTube throttles downloads to a crawl unless the downloader can solve its JavaScript challenge.
+   yt-dlp needs a JS runtime for that: use Deno or Node if installed, otherwise fetch Deno once. */
+static void on_deno_line(const char *line, void *ctx) {
+    int g = *(int *)ctx; double v = parse_pct(line);
+    if (v >= 0) { char m[120]; snprintf(m, sizeof m, "Setting up fast downloads (one time)… %d%%", (int)v); set_game(g, 1, v, m); }
+}
+static void find_js_runtime(int g, char *out, size_t cap) {
+    char *own = cat3(SUPPORT, "/deno", "");
+    const char *fixed[] = {own, "/opt/homebrew/bin/deno", "/usr/local/bin/deno", "/opt/homebrew/bin/node", "/usr/local/bin/node", 0};
+    for (int i = 0; fixed[i]; i++) if (access(fixed[i], X_OK) == 0) {
+        snprintf(out, cap, "%s:%s", strstr(fixed[i], "deno") ? "deno" : "node", fixed[i]); free(own); return; }
+    /* Node installed with nvm or Volta */
+    char *nvm = cat3(HOME, "/.nvm/versions/node", "");
+    Buf ls = {0}; char *argv[] = {"/bin/ls", "-1", nvm, 0}; run(argv, &ls);
+    if (ls.p) {
+        char *last = 0; for (char *l = strtok_r_(ls.p); l; l = strtok_r_(0)) last = l;
+        if (last) { Buf p = {0}; bs(&p, nvm); bs(&p, "/"); bs(&p, last); bs(&p, "/bin/node");
+            if (access(p.p, X_OK) == 0) { snprintf(out, cap, "node:%s", p.p); free(p.p); free(ls.p); free(nvm); free(own); return; }
+            free(p.p); }
+    }
+    free(ls.p); free(nvm);
+    char *volta = cat3(HOME, "/.volta/bin/node", "");
+    if (access(volta, X_OK) == 0) { snprintf(out, cap, "node:%s", volta); free(volta); free(own); return; }
+    free(volta);
+    /* nothing installed: fetch Deno (single binary) into our support folder */
+#if defined(__aarch64__) || defined(__arm64__)
+    const char *url = "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-apple-darwin.zip";
+#else
+    const char *url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-apple-darwin.zip";
+#endif
+    set_game(g, 1, 0, "Setting up fast downloads (one time)…");
+    char *zip = cat3(SUPPORT, "/deno.zip", ""); unlink(zip);
+    char *cargv[] = {"/usr/bin/curl", "-fL", "--progress-bar", "--connect-timeout", "20", "-o", zip, (char *)url, 0};
+    int to = 0, gg = g;
+    if (run_lines(cargv, on_deno_line, &gg, 60, 900, &to) == 0 && file_size(zip) > 1000000) {
+        char *uargv[] = {"/usr/bin/unzip", "-o", "-q", zip, "-d", SUPPORT, 0};
+        if (run(uargv, 0) == 0) chmod(own, 0755);
+    }
+    unlink(zip); free(zip);
+    if (access(own, X_OK) == 0) snprintf(out, cap, "deno:%s", own);
+    free(own);
+}
+
 static void *download_game(void *arg) {
     int g = (int)(intptr_t)arg;
     char *yt = cat3(SUPPORT, "/yt-dlp_macos", "");
@@ -665,10 +718,8 @@ static void *download_game(void *arg) {
     unlink(tmp);
     {
         /* YouTube throttles downloaders that can't solve its JS challenge; use a JS runtime if one is installed */
-        const char *rt_paths[] = {"/opt/homebrew/bin/node", "/usr/local/bin/node", "/opt/homebrew/bin/deno", "/usr/local/bin/deno", 0};
-        char rtarg[200] = {0};
-        for (int i = 0; rt_paths[i]; i++) if (access(rt_paths[i], X_OK) == 0) {
-            snprintf(rtarg, sizeof rtarg, "%s:%s", strstr(rt_paths[i], "deno") ? "deno" : "node", rt_paths[i]); break; }
+        char rtarg[1200] = {0};
+        find_js_runtime(g, rtarg, sizeof rtarg);
         char *argv[40]; int a = 0;
         argv[a++] = yt; argv[a++] = (char *)GAME_QUERY[g];
         argv[a++] = "--no-config"; argv[a++] = "--ignore-errors"; argv[a++] = "--socket-timeout"; argv[a++] = "20";

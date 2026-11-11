@@ -9,7 +9,7 @@ OUT = os.path.join(ROOT, "out")
 APP = os.path.join(OUT, "Brainrot Voice Memo.app")
 EXE = "BrainrotVoicemail"
 IDENT = "com.hank.brainrotvoicemail"
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 INFO_PLIST = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
