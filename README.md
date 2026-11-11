@@ -15,7 +15,7 @@ Mac app that turns iMessage voice messages into brainrot videos: your friends' v
 
 ## Install
 
-1. Download `Brainrot-Voice-Memo-mac.zip` from Releases (or build it, below), unzip, and move the app to Applications.
+1. Download [`dist/Brainrot-Voice-Memo-mac.zip`](dist/Brainrot-Voice-Memo-mac.zip) (or build it, below), unzip, and move the app to Applications.
 2. Open it. macOS blocks it the first time because it isn't notarized: System Settings > Privacy & Security > Open Anyway.
 3. Grant Full Disk Access when the app asks (needed to read `~/Library/Messages/chat.db`), then Relaunch.
 4. Allow Speech Recognition the first time captions run.
