@@ -111,8 +111,10 @@ kbd{background:#232832;border-radius:4px;padding:1px 5px;font-size:11px}
     <h2>Gameplay</h2>
     <div class="row">
       <select id="game">
-        <option value="subway">Subway Surfers</option>
-        <option value="minecraft">Minecraft Parkour</option>
+        <option value="builtin-subway">Train Runner (built-in, instant)</option>
+        <option value="builtin-parkour">Block Parkour (built-in, instant)</option>
+        <option value="subway">Subway Surfers (YouTube download)</option>
+        <option value="minecraft">Minecraft Parkour (YouTube download)</option>
         <option value="custom">My own video file</option>
       </select>
       <button class="btn" id="newvid" style="flex:none" title="Get a different gameplay video">↻ New</button>
@@ -144,6 +146,7 @@ kbd{background:#232832;border-radius:4px;padding:1px 5px;font-size:11px}
 </div>
 <audio id="audio" preload="auto"></audio>
 <script>
+/*@BUILTIN_GAMEPLAY@*/
 const $ = s => document.querySelector(s);
 const audio = $("#audio"), bg = $("#bg"), stage = $("#stage"), sctx = stage.getContext("2d");
 let all = [], view = [], dir = "all";
@@ -316,10 +319,14 @@ function setGameStatus(text, pct){
   $("#gpbar").style.display = pct == null ? "none" : "block";
   $("#gpbar div").style.width = (pct||0) + "%";
 }
+const isBuiltin = () => $("#game").value.startsWith("builtin");
+let gameClock = 0, gameLast = performance.now();
+function tickGame(){ const now = performance.now(); if (!audio.paused && !exporting) gameClock += (now - gameLast) / 1000; gameLast = now; }
 async function refreshGame(mode){   // mode: "start" | "new" | "poll"
   const g = $("#game").value;
-  try { localStorage.setItem("game", g); } catch(e){}
+  try { localStorage.setItem("game2", g); } catch(e){}
   clearTimeout(gpoll);
+  if (isBuiltin()){ bg.pause(); setGameStatus("Built-in gameplay: nothing to download."); if (mode === "new") gameClock += 37; return; }
   if (g === "custom"){
     let {j} = await api("/api/gameplay?q=custom");
     if (mode === "new" || (mode === "start" && j.state !== "ready")){
@@ -445,7 +452,9 @@ const BARS = 40;
 function drawScene(g, W, H, s){
   const u = Math.min(W, H) / 1080, vertical = H > W;
   g.fillStyle = "#000"; g.fillRect(0, 0, W, H);
-  if (bg.readyState >= 2 && bg.videoWidth){
+  if (isBuiltin()){
+    Builtin.draw($("#game").value, g, W, H, s.gameT);
+  } else if (bg.readyState >= 2 && bg.videoWidth){
     const k = Math.max(W / bg.videoWidth, H / bg.videoHeight), w = bg.videoWidth * k, h = bg.videoHeight * k;
     g.drawImage(bg, (W - w) / 2, (H - h) / 2, w, h);
   } else {
@@ -492,7 +501,8 @@ function draw(){
       const v = playing ? vizData[Math.floor(2 + mirror * (vizData.length * 0.45) / (BARS / 2))] / 255 : 0;
       liveLevels[i] = liveLevels[i] * 0.55 + v * 0.45;
     }
-    drawScene(sctx, stage.width, stage.height, {msg: curMsg, idx: qi, n: reelMode ? queue.length : 1,
+    tickGame();
+    drawScene(sctx, stage.width, stage.height, {gameT: gameClock, msg: curMsg, idx: qi, n: reelMode ? queue.length : 1,
       progress: audio.duration ? audio.currentTime / audio.duration : 0, levels: liveLevels, capT: curMsg ? audio.currentTime : null});
   }
   requestAnimationFrame(draw);
@@ -578,7 +588,7 @@ $("#export").onclick = async () => {
   if (exporting) return;
   const items = reel.length ? reel.slice() : (curMsg ? [curMsg] : []);
   if (!items.length){ $("#estatus").textContent = "Add voice messages to the reel (+) or play one first."; return; }
-  if (!(bg.readyState >= 2)){ $("#estatus").textContent = "Gameplay video isn't ready yet."; return; }
+  if (!isBuiltin() && !(bg.readyState >= 2)){ $("#estatus").textContent = "Gameplay video isn't ready yet. Pick a built-in gameplay to export right away."; return; }
   const [W, H] = FORMATS[$("#fmt").value];
   const encCfg = await pickEncoder(W, H);
   if (!encCfg){ $("#estatus").textContent = "Fast export isn't supported here; recording in real time instead."; return exportRealtime(items); }
@@ -611,7 +621,8 @@ $("#export").onclick = async () => {
       error: e => { encErr = e; }
     });
     enc.configure(encCfg);
-    bg.muted = true; bg.playbackRate = 1; await bg.play().catch(() => {});
+    const gameStart = gameClock;
+    if (!isBuiltin()){ bg.muted = true; bg.playbackRate = 1; await bg.play().catch(() => {}); }
     const levels = new Float32Array(BARS); let lastSeg = 0;
     const t0 = performance.now(); let tFrames = performance.now();
     for (let f = 0; f < N && !cancelled && !encErr; f++){
@@ -621,14 +632,14 @@ $("#export").onclick = async () => {
       if (si !== lastSeg) { levels.fill(0); lastSeg = si; }
       const s = segs[si], ct = tt - s.at;
       levelsAt(inClip ? s.env : null, ct, levels);
-      drawScene(g, W, H, {msg: s.m, idx: si, n: segs.length, progress: Math.max(0, ct / s.dur), levels, capT: inClip ? ct : null});
+      drawScene(g, W, H, {gameT: gameStart + tt, msg: s.m, idx: si, n: segs.length, progress: Math.max(0, ct / s.dur), levels, capT: inClip ? ct : null});
       const vf = new VideoFrame(cv, {timestamp: Math.round(tt * 1e6), duration: Math.round(1e6 / FPS)});
       enc.encode(vf, {keyFrame: f % (FPS * 2) === 0}); vf.close();
       while (enc.encodeQueueSize > 6) await yieldNow();
       if (f % 15 === 14){
         // keep the gameplay moving at the same pace as our frames, so it looks normal speed in the video
         const now = performance.now(), fps = 15000 / Math.max(1, now - tFrames); tFrames = now;
-        bg.playbackRate = Math.max(0.25, Math.min(8, fps / FPS));
+        if (!isBuiltin()) bg.playbackRate = Math.max(0.25, Math.min(8, fps / FPS));
         const pct = Math.floor(f / N * 100), el = (now - t0) / 1000, left = el / Math.max(1, f) * (N - f);
         $("#rectext").textContent = `Rendering ${pct}% · ${fmt(left)} left`;
       }
@@ -677,7 +688,7 @@ async function exportRealtime(items){
   const t0 = performance.now(); const tick = setInterval(() => $("#rectext").textContent = "Recording " + fmt((performance.now() - t0) / 1000), 250);
   $("#cancel").onclick = () => { cancelled = true; cancelExport && cancelExport(); };
   reelMode = items.length > 1; queue = items; bg.play().catch(()=>{});
-  const liveDraw = () => { if (!exporting) return; drawScene(sctx, stage.width, stage.height, {msg: curMsg, idx: qi, n: queue.length, progress: audio.duration ? audio.currentTime / audio.duration : 0, levels: liveLevels, capT: audio.currentTime}); requestAnimationFrame(liveDraw); };
+  const liveDraw = () => { if (!exporting) return; gameClock += 1 / 60; drawScene(sctx, stage.width, stage.height, {gameT: gameClock, msg: curMsg, idx: qi, n: queue.length, progress: audio.duration ? audio.currentTime / audio.duration : 0, levels: liveLevels, capT: audio.currentTime}); requestAnimationFrame(liveDraw); };
   liveDraw();
   rec.start(1000); await sleep(600);
   for (let i = 0; i < items.length && !cancelled; i++){ qi = i; await playOnce(items[i]); if (!cancelled) await sleep(450); }
@@ -693,7 +704,7 @@ async function exportRealtime(items){
 
 /* ---------------- boot ---------------- */
 try { const f = localStorage.getItem("fmt"); if (f && FORMATS[f]) $("#fmt").value = f;
-      const g = localStorage.getItem("game"); if (g) $("#game").value = g;
+      const g = localStorage.getItem("game2"); if (g) $("#game").value = g;
       if (localStorage.getItem("caps") === "0") $("#caps").checked = false; } catch(e){}
 setFormat(); renderReel(); draw();
 load(false);

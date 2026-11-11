@@ -9,7 +9,7 @@ OUT = os.path.join(ROOT, "out")
 APP = os.path.join(OUT, "Brainrot Voice Memo.app")
 EXE = "BrainrotVoicemail"
 IDENT = "com.hank.brainrotvoicemail"
-VERSION = "1.3.2"
+VERSION = "1.4"
 
 INFO_PLIST = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -85,6 +85,7 @@ def sh(*cmd):
 def main():
     # embed the UI
     html = open(os.path.join(ROOT, "src/index.html"), "rb").read()
+    html = html.replace(b"/*@BUILTIN_GAMEPLAY@*/", open(os.path.join(ROOT, "src/builtin_gameplay.js"), "rb").read())
     rows = ",\n".join(",".join(str(x) for x in html[i:i + 24]) for i in range(0, len(html), 24))
     open(os.path.join(ROOT, "src/html.c"), "w").write(
         f"#include <stddef.h>\nconst char INDEX_HTML[] = {{\n{rows},0}};\nconst size_t INDEX_HTML_LEN = {len(html)};\n")

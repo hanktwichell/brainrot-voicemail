@@ -7,7 +7,7 @@ Mac app that turns iMessage voice messages into brainrot videos: your friends' v
 ## Features
 
 - Lists every iMessage voice message on the Mac, with contact names and group chat names
-- Plays them over gameplay video (Subway Surfers, Minecraft parkour, or any video file you pick)
+- Plays them over gameplay: two built-in procedurally drawn scenes (Train Runner, Block Parkour) that need no download, or a YouTube download (Subway Surfers, Minecraft parkour), or any video file you pick
 - Reel: add multiple voice messages, reorder them, and merge them into one video
 - Captions: word-level timestamps from Apple's on-device speech recognition, shown 1-3 words at a time with the spoken word highlighted
 - Export to MP4 in three formats: iPhone full screen (1080x2340), vertical 9:16 (1080x1920), horizontal 16:9 (1920x1080)
@@ -30,7 +30,7 @@ Requires macOS 11+, Apple Silicon or Intel. Exports land in `~/Movies/Brainrot V
 | Backend | In-process HTTP server on `127.0.0.1`, serving the UI and a small JSON API |
 | Messages | Read-only snapshot of `chat.db` (plus WAL) queried with the system `libsqlite3`; contact names from the AddressBook databases |
 | Audio | Voice messages are Opus in CAF; converted to AAC with the built-in `afconvert` and cached |
-| Gameplay | Downloaded once with [yt-dlp](https://github.com/yt-dlp/yt-dlp) (fetched on first use) and cached; or a user-picked file |
+| Gameplay | Built-in scenes drawn on a canvas each frame (`src/builtin_gameplay.js`, deterministic so exports match previews); optional YouTube gameplay downloaded once with [yt-dlp](https://github.com/yt-dlp/yt-dlp) (fetched on first use) and cached; or a user-picked file |
 | Captions | `SFSpeechRecognizer` with `SFSpeechURLRecognitionRequest`, on-device when available |
 | Export | Canvas renderer, `VideoEncoder` (H.264), minimal MP4 muxer in JS, then `AVMutableComposition` + `AVAssetExportSession` places each voice clip on the timeline |
 
@@ -54,6 +54,7 @@ Requirements: `clang` (18+), `ld64.lld-18`, `llvm-lipo-18`, `llvm-nm`, Python 3,
 ```
 src/main.c        native app: window, HTTP server, Messages/Contacts, audio, gameplay, captions, export
 src/index.html    UI, renderer, caption chunking, WebCodecs export, MP4 muxer
+src/builtin_gameplay.js  procedural Train Runner and Block Parkour scenes (inlined into the UI at build time)
 sign.py           ad-hoc Mach-O code signer
 build.py          cross-build, bundle, sign, zip
 sdk/*.tbd         link stubs for libSystem, libobjc, libsqlite3, Foundation, AppKit, WebKit, Speech, AVFoundation
