@@ -1,0 +1,5 @@
+out/
+src/html.c
+__pycache__/
+*.o
+bvtest

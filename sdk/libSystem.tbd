@@ -1,0 +1,9 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-macos, arm64-macos ]
+install-name:    '/usr/lib/libSystem.B.dylib'
+current-version: 1
+exports:
+  - targets:         [ x86_64-macos, arm64-macos ]
+    symbols:         [ __NSConcreteGlobalBlock, __NSGetEnviron, __NSGetExecutablePath, ___bzero, ___error, ___stack_chk_fail, ___stack_chk_guard, _accept, _access, _arc4random, _bind, _bzero, _calloc, _chmod, _close, _connect, _dispatch_semaphore_create, _dispatch_semaphore_signal, _dispatch_semaphore_wait, _dispatch_time, _exit, _fclose, _fcntl, _fopen, _fread, _free, _fseeko, _ftello, _fwrite, _getenv, _getsockname, _kill, _listen, _malloc, _memcpy, _mkdir, _os_unfair_lock_lock, _os_unfair_lock_unlock, _pipe, _posix_spawn, _posix_spawn_file_actions_addclose, _posix_spawn_file_actions_adddup2, _posix_spawn_file_actions_addopen, _posix_spawn_file_actions_destroy, _posix_spawn_file_actions_init, _pthread_create, _pthread_detach, _read, _realloc, _rename, _setsockopt, _signal, _snprintf, _socket, _strchr, _strcmp, _strdup, _strlen, _strncmp, _strrchr, _strstr, _time, _unlink, _usleep, _waitpid, _write, dyld_stub_binder ]
+...

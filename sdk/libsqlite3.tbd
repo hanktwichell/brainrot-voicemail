@@ -1,0 +1,9 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-macos, arm64-macos ]
+install-name:    '/usr/lib/libsqlite3.dylib'
+current-version: 1
+exports:
+  - targets:         [ x86_64-macos, arm64-macos ]
+    symbols:         [ _sqlite3_close, _sqlite3_column_int64, _sqlite3_column_text, _sqlite3_errmsg, _sqlite3_finalize, _sqlite3_open_v2, _sqlite3_prepare_v2, _sqlite3_step ]
+...

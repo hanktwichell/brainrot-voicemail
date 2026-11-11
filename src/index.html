@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brainrot Voicemail</title>
+<style>
+:root{--bg:#0b0d10;--panel:#14171c;--panel2:#191d23;--line:#262a31;--text:#e9ecf1;--dim:#8b93a1;--blue:#0a84ff;--red:#ff453a}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+font:13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-user-select:none;user-select:none;overflow:hidden}
+#app{display:grid;grid-template-columns:290px 1fr 330px;height:100vh}
+aside,#side{background:var(--panel);display:flex;flex-direction:column;min-height:0}
+aside{border-right:1px solid var(--line)}#side{border-left:1px solid var(--line);overflow-y:auto}
+.head{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
+h1{font-size:15px;margin:0 0 10px;font-weight:650}
+h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 8px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+input[type=search],select,input[type=text]{background:#0f1115;border:1px solid var(--line);color:var(--text);
+border-radius:8px;padding:7px 9px;font:inherit;width:100%;-webkit-user-select:text;user-select:text;outline:none}
+input:focus,select:focus{border-color:#3a6fd8}
+.seg{display:flex;background:#0f1115;border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
+.seg button{flex:1;background:none;border:0;color:var(--dim);padding:6px;font:inherit;cursor:pointer}
+.seg button.on{background:#232832;color:var(--text)}
+#list{overflow-y:auto;flex:1}
+.item{padding:9px 10px 9px 14px;border-bottom:1px solid #1c2026;cursor:pointer;display:flex;gap:10px;align-items:center}
+.item:hover{background:#1a1e24}.item.on{background:#1d2a3c}
+.item.na{opacity:.4;cursor:default}
+.av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:650;font-size:12px}
+.meta{min-width:0;flex:1}.who{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:#0f1115;color:var(--text);cursor:pointer;font-size:15px;line-height:1}
+.add:hover{background:var(--blue);border-color:var(--blue)}.add.in{background:#1f3a24;border-color:#30d158;color:#30d158}
+.count{color:var(--dim);font-size:12px;padding:8px 14px;border-top:1px solid var(--line)}
+main{position:relative;overflow:hidden;background:#000;display:grid;place-items:center}
+#stage{max-width:calc(100% - 32px);max-height:calc(100vh - 32px);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.6);background:#111}
+#bg{display:none}
+.sec{padding:14px;border-bottom:1px solid var(--line)}
+#nowwho{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nowsub{color:var(--dim);font-size:12px;margin-top:2px;min-height:17px}
+.bar{height:4px;background:#2a2f38;border-radius:4px;cursor:pointer;position:relative;margin-top:12px}
+#fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--blue);border-radius:4px}
+.times{display:flex;justify-content:space-between;color:var(--dim);font-size:11px;margin-top:5px;font-variant-numeric:tabular-nums}
+.ctrls{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:6px}
+.ctrls button{background:none;border:0;color:var(--text);cursor:pointer;font-size:16px;padding:6px 10px;border-radius:8px}
+.ctrls button:hover{background:rgba(255,255,255,.08)}
+#play{width:42px;height:42px;border-radius:50%!important;background:var(--text)!important;color:#000!important}
+label.chk{color:var(--dim);font-size:12px;display:flex;gap:6px;align-items:center;cursor:pointer;margin-top:8px;justify-content:center}
+.btn{background:#232832;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 11px;cursor:pointer;font:inherit}
+.btn:hover{background:#2b313b}.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--blue);border-color:var(--blue);font-weight:600}.btn.primary:hover{background:#2a92ff}
+.btn.danger{background:var(--red);border-color:var(--red)}
+.btn.small{padding:4px 8px;font-size:12px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+.status{color:var(--dim);font-size:12px;margin-top:8px;min-height:16px}
+.pbar{height:4px;background:#2a2f38;border-radius:4px;margin-top:6px;overflow:hidden;display:none}
+.pbar div{height:100%;width:0;background:var(--blue);transition:width .3s}
+#reel{margin:0;padding:0;list-style:none}
+#reel li{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #1f232a}
+#reel li .n{color:var(--dim);width:16px;text-align:right;font-variant-numeric:tabular-nums}
+#reel li .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#reel li .d{color:var(--dim);font-variant-numeric:tabular-nums}
+#reel li button{background:none;border:0;color:var(--dim);cursor:pointer;padding:2px 4px;font-size:13px}
+#reel li button:hover{color:var(--text)}
+#reel li.playing .t{color:#64d2ff}
+.empty-reel{color:var(--dim);font-size:12px;padding:4px 0 2px}
+#overlay{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:40px;color:var(--dim);background:rgba(0,0,0,.6);z-index:5}
+#overlay>div{max-width:480px;background:rgba(20,23,28,.97);padding:26px;border-radius:16px;border:1px solid var(--line)}
+#overlay h2{all:unset;display:block;color:var(--text);font-size:18px;font-weight:700;margin-bottom:10px}
+#overlay ol{text-align:left;padding-left:20px;margin:12px 0 18px;line-height:1.7}
+#overlay b{color:var(--text)}
+#overlay .row{justify-content:center;flex-wrap:wrap}#overlay .row>*{flex:none}
+#rec{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:10px;background:rgba(20,23,28,.92);
+border:1px solid var(--line);padding:8px 10px 8px 14px;border-radius:999px;z-index:4;font-variant-numeric:tabular-nums}
+#rec .dot{width:10px;height:10px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+kbd{background:#232832;border-radius:4px;padding:1px 5px;font-size:11px}
+</style></head>
+<body><div id="app">
+<aside>
+  <div class="head">
+    <h1>Voice Messages</h1>
+    <input id="q" type="search" placeholder="Search people or chats">
+    <div class="seg" id="dir">
+      <button data-v="all" class="on">All</button><button data-v="in">Received</button><button data-v="out">Sent</button>
+    </div>
+  </div>
+  <div id="list"></div>
+  <div class="count" id="count">Loading…</div>
+</aside>
+
+<main>
+  <canvas id="stage"></canvas>
+  <div id="rec"><span class="dot"></span><span id="rectext">Recording 0:00</span><button class="btn small danger" id="cancel">Cancel</button></div>
+  <div id="overlay"><div id="overlaymsg"></div></div>
+  <video id="bg" muted loop playsinline preload="auto"></video>
+</main>
+
+<div id="side">
+  <div class="sec">
+    <h2>Now playing</h2>
+    <div id="nowwho">Pick a voice message</div>
+    <div id="nowsub">Click one on the left, or press <kbd>Space</kbd></div>
+    <div class="bar" id="bar"><div id="fill"></div></div>
+    <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+    <div class="ctrls">
+      <button id="prev" title="Previous (←)">⏮</button>
+      <button id="play" title="Play/Pause (Space)">▶</button>
+      <button id="next" title="Next (→)">⏭</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="auto" checked> Autoplay next</label>
+  </div>
+
+  <div class="sec">
+    <h2>Gameplay</h2>
+    <div class="row">
+      <select id="game">
+        <option value="subway">Subway Surfers</option>
+        <option value="minecraft">Minecraft Parkour</option>
+        <option value="custom">My own video file</option>
+      </select>
+      <button class="btn" id="newvid" style="flex:none" title="Get a different gameplay video">↻ New</button>
+    </div>
+    <div class="pbar" id="gpbar"><div></div></div>
+    <div class="status" id="gstatus"></div>
+  </div>
+
+  <div class="sec">
+    <h2><span>Reel <span id="reelcount"></span></span><button class="btn small" id="clearreel">Clear</button></h2>
+    <ul id="reel"></ul>
+    <div class="empty-reel" id="reelempty">Hit <b>+</b> on voice messages to merge them into one video, in order.</div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="playreel">▶ Play reel</button></div>
+  </div>
+
+  <div class="sec" style="border-bottom:0">
+    <h2>Export</h2>
+    <select id="fmt">
+      <option value="iphone">iPhone full screen (9:19.5, 1080×2340)</option>
+      <option value="vertical">Vertical 9:16 (TikTok / Reels, 1080×1920)</option>
+      <option value="horizontal">Horizontal 16:9 (1920×1080)</option>
+    </select>
+    <label class="chk" style="justify-content:flex-start;margin-top:10px"><input type="checkbox" id="caps" checked> Captions (1–3 words at a time)</label>
+    <div class="status" id="cstatus" style="margin-top:2px"></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="export">⤓ Export video</button></div>
+    <div class="status" id="estatus">Exports the reel (or the current message) to Movies › Brainrot Voicemail. Renders faster than real time.</div>
+  </div>
+</div>
+</div>
+<audio id="audio" preload="auto"></audio>
+<script>
+const $ = s => document.querySelector(s);
+const audio = $("#audio"), bg = $("#bg"), stage = $("#stage"), sctx = stage.getContext("2d");
+let all = [], view = [], dir = "all";
+let queue = [], qi = -1, curMsg = null, reel = [], reelMode = false;
+let exporting = false, cancelExport = null;
+const durations = {};
+const FORMATS = { iphone:[1080,2340], vertical:[1080,1920], horizontal:[1920,1080] };
+const COLORS = ["#ff453a","#ff9f0a","#ffd60a","#30d158","#64d2ff","#0a84ff","#bf5af2","#ff375f"];
+const color = s => COLORS[[...(s||"?")].reduce((a,c)=>a+c.charCodeAt(0),0)%COLORS.length];
+const initials = s => { const w = String(s||"").split(/\s+/).map(x=>x.replace(/[^A-Za-z0-9]/g,"")).filter(Boolean);
+  return (w.length ? w.slice(0,2).map(x=>x[0]).join("") : "#").toUpperCase(); };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = t => !isFinite(t)||t<0 ? "0:00" : `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,"0")}`;
+const fmtDate = ts => { if(!ts) return ""; const d=new Date(ts*1000);
+  return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year: d.getFullYear()!==new Date().getFullYear()?"numeric":undefined})
+    + " · " + d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const api = (p, ms = 20000) => {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  return fetch(p, {signal: ac.signal}).then(r => r.json().then(j => ({ok:r.ok, status:r.status, j}))).finally(() => clearTimeout(t));
+};
+const title = m => m.from_me ? `You → ${m.chat||""}` : m.sender;
+const subtitle = m => (m.group ? m.chat + " · " : "") + fmtDate(m.ts);
+
+function showOverlay(html){ $("#overlaymsg").innerHTML = html; $("#overlay").style.display = html ? "grid" : "none"; }
+function fdaScreen(){
+  showOverlay(`<h2>One-time permission</h2>
+    macOS keeps iMessage private, so this app needs <b>Full Disk Access</b> to read your voice messages.
+    <ol><li>Click <b>Open Settings</b> below</li>
+    <li>Turn on <b>Brainrot Voicemail</b> in the list<br><span style="font-size:12px">Not listed? Click <b>+</b> and pick the app (<b>Show App</b> finds it)</span></li>
+    <li>Choose <b>Quit &amp; Reopen</b> if macOS asks, or click <b>Relaunch</b> here</li></ol>
+    <div class="row"><button class="btn primary" onclick="api('/api/open-fda')">Open Settings</button>
+    <button class="btn" onclick="api('/api/reveal')">Show App</button>
+    <button class="btn" onclick="api('/api/relaunch')">Relaunch</button></div>`);
+}
+
+/* ---------------- messages list ---------------- */
+async function load(refresh){
+  $("#count").textContent = "Scanning Messages…";
+  let ok, status, j;
+  try { ({ok, status, j} = await api("/api/messages" + (refresh ? "?refresh=1" : ""), 60000)); }
+  catch(e) { $("#count").textContent = "Not responding";
+    return showOverlay(`<h2>The app's background service isn't responding</h2>Quit Brainrot Voicemail (⌘Q) and open it again.
+      If that doesn't help, restart your Mac.<div class="row" style="margin-top:16px"><button class="btn" onclick="load(true)">Try again</button></div>`); }
+  if (status === 403){ $("#count").textContent = "Waiting for permission"; return fdaScreen(); }
+  if (!ok){ $("#count").textContent = "Error"; return showOverlay(`<h2>Couldn't read Messages</h2>${esc(j.error||"Unknown error")}`); }
+  all = j; render();
+  if (!all.length) showOverlay(`<h2>No voice messages found</h2>iMessage deletes audio messages 2 minutes after you listen
+    unless you tap <b>Keep</b>. To keep them from now on: iPhone Settings → Messages → Audio Messages → Expire → <b>Never</b>.
+    <div class="row" style="margin-top:16px"><button class="btn" onclick="load(true)">Rescan</button></div>`);
+  else showOverlay("");
+}
+function render(){
+  const q = $("#q").value.trim().toLowerCase();
+  view = all.filter(m => (dir==="all" || (dir==="in" ? !m.from_me : m.from_me))
+    && (!q || (m.sender+" "+m.chat).toLowerCase().includes(q)));
+  $("#list").innerHTML = view.map((m,i) => {
+    const t = m.group ? `${esc(m.sender)} <span style="color:var(--dim);font-weight:400">in ${esc(m.chat)}</span>`
+                : (m.from_me ? `Me → ${esc(m.chat||"?")}` : esc(m.sender));
+    const inReel = reel.some(r => r.id === m.id);
+    return `<div class="item ${m.available?"":"na"} ${curMsg&&curMsg.id===m.id?"on":""}" data-i="${i}" title="${m.available?"":"Not downloaded to this Mac"}">
+      <div class="av" style="background:${color(m.sender)}22;color:${color(m.sender)}">${esc(initials(m.sender))}</div>
+      <div class="meta"><div class="who">${t}</div><div class="sub">${fmtDate(m.ts)}${m.available?"":" · not on this Mac"}</div></div>
+      ${m.available ? `<button class="add ${inReel?"in":""}" data-add="${i}" title="${inReel?"In reel":"Add to reel"}">${inReel?"✓":"+"}</button>` : ""}</div>`;
+  }).join("");
+  const n = view.filter(m=>m.available).length;
+  $("#count").textContent = `${view.length} voice message${view.length===1?"":"s"} · ${n} playable`;
+}
+$("#list").addEventListener("click", e => {
+  if (exporting) return;
+  const add = e.target.closest("[data-add]");
+  if (add){ const m = view[+add.dataset.add]; toggleReel(m); return; }
+  const el = e.target.closest(".item"); if (!el) return;
+  const m = view[+el.dataset.i]; if (!m.available) return;
+  reelMode = false; queue = view.filter(x => x.available); playAt(queue.findIndex(x => x.id === m.id));
+});
+$("#q").addEventListener("input", render);
+$("#dir").addEventListener("click", e => { if(!e.target.dataset.v) return;
+  dir = e.target.dataset.v; [...$("#dir").children].forEach(b=>b.classList.toggle("on",b===e.target)); render(); });
+
+/* ---------------- playback ---------------- */
+function setNow(m){
+  curMsg = m;
+  $("#nowwho").textContent = m ? title(m) : "Pick a voice message";
+  $("#nowsub").textContent = m ? subtitle(m) : "";
+  [...$("#list").children].forEach(el => el.classList.toggle("on", !!m && view[+el.dataset.i]?.id === m.id));
+  [...$("#reel").children].forEach((li,i) => li.classList.toggle("playing", reelMode && i === qi));
+}
+function playAt(i){
+  const m = queue[i]; if (!m) return;
+  qi = i; setNow(m);
+  ensureAudioGraph();
+  if ($("#caps").checked) getTranscript(m);
+  audio.src = "/audio/" + m.id; audio.play().catch(()=>{});
+  const el = [...$("#list").children].find(el => view[+el.dataset.i]?.id === m.id); el?.scrollIntoView({block:"nearest"});
+}
+function step(d){ if (qi + d >= 0 && qi + d < queue.length){ playAt(qi + d); return true; } return false; }
+$("#play").onclick = () => {
+  if (exporting) return;
+  if (!curMsg){ reelMode = false; queue = view.filter(x=>x.available); return playAt(0); }
+  audio.paused ? audio.play() : audio.pause();
+};
+$("#next").onclick = () => !exporting && step(1);
+$("#prev").onclick = () => !exporting && (audio.currentTime > 2 ? (audio.currentTime = 0) : step(-1));
+audio.addEventListener("play", () => { $("#play").textContent = "❚❚"; bg.play().catch(()=>{}); actx && actx.resume(); });
+audio.addEventListener("pause", () => { $("#play").textContent = "▶"; if (!exporting) bg.pause(); });
+audio.addEventListener("ended", () => { $("#play").textContent = "▶"; if (exporting) return;
+  if (!($("#auto").checked && step(1))) bg.pause(); });
+audio.addEventListener("error", () => { if (!curMsg || exporting) return; $("#nowsub").textContent = "Couldn't play this one. Skipping…"; setTimeout(()=>step(1), 900); });
+audio.addEventListener("loadedmetadata", () => { if (curMsg && isFinite(audio.duration)) { durations[curMsg.id] = audio.duration; renderReel(); } });
+audio.addEventListener("timeupdate", () => { $("#cur").textContent = fmt(audio.currentTime); $("#dur").textContent = fmt(audio.duration);
+  $("#fill").style.width = (audio.duration ? audio.currentTime/audio.duration*100 : 0) + "%"; });
+$("#bar").onclick = e => { if (!audio.duration || exporting) return; const r = e.currentTarget.getBoundingClientRect();
+  audio.currentTime = (e.clientX - r.left) / r.width * audio.duration; };
+document.addEventListener("keydown", e => {
+  if (["INPUT","SELECT"].includes(e.target.tagName) || exporting) return;
+  if (e.code === "Space"){ e.preventDefault(); $("#play").click(); }
+  if (e.code === "ArrowRight"){ e.preventDefault(); step(1); }
+  if (e.code === "ArrowLeft"){ e.preventDefault(); $("#prev").click(); }
+});
+
+/* ---------------- audio graph (visualizer + recording tap) ---------------- */
+let actx, analyser, vizData;
+function ensureAudioGraph(){
+  if (actx) { actx.resume(); return; }
+  try {
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = actx.createMediaElementSource(audio);
+    analyser = actx.createAnalyser(); analyser.fftSize = 256; analyser.smoothingTimeConstant = .7;
+    src.connect(analyser); analyser.connect(actx.destination);
+    vizData = new Uint8Array(analyser.frequencyBinCount);
+  } catch(e) { console.log("audio graph failed", e); }
+}
+
+/* ---------------- reel ---------------- */
+function toggleReel(m){
+  const i = reel.findIndex(r => r.id === m.id);
+  if (i >= 0) reel.splice(i, 1); else { reel.push(m); probeDuration(m); if ($("#caps").checked) getTranscript(m); }
+  render(); renderReel();
+}
+function probeDuration(m){
+  if (durations[m.id]) return;
+  const a = new Audio(); a.preload = "metadata"; a.src = "/audio/" + m.id;
+  a.onloadedmetadata = () => { if (isFinite(a.duration)) { durations[m.id] = a.duration; renderReel(); } a.src = ""; };
+}
+function renderReel(){
+  $("#reel").innerHTML = reel.map((m,i) => `<li class="${reelMode&&i===qi?"playing":""}"><span class="n">${i+1}</span>
+    <span class="t">${esc(title(m))}</span><span class="d">${durations[m.id]?fmt(durations[m.id]):""}</span>
+    <button data-mv="${i}:-1" title="Move up">↑</button><button data-mv="${i}:1" title="Move down">↓</button>
+    <button data-rm="${i}" title="Remove">✕</button></li>`).join("");
+  const total = reel.reduce((s,m) => s + (durations[m.id]||0), 0);
+  $("#reelcount").textContent = reel.length ? `· ${reel.length} · ${fmt(total)}` : "";
+  $("#reelempty").style.display = reel.length ? "none" : "";
+  $("#playreel").disabled = !reel.length;
+}
+$("#reel").addEventListener("click", e => {
+  if (exporting) return;
+  const mv = e.target.dataset.mv, rm = e.target.dataset.rm;
+  if (mv){ const [i,d] = mv.split(":").map(Number), j = i + d; if (j < 0 || j >= reel.length) return; [reel[i], reel[j]] = [reel[j], reel[i]]; }
+  if (rm !== undefined) reel.splice(+rm, 1);
+  render(); renderReel();
+});
+$("#clearreel").onclick = () => { if (exporting) return; reel = []; render(); renderReel(); };
+$("#playreel").onclick = () => { if (!reel.length || exporting) return; reelMode = true; queue = reel.slice(); playAt(0); };
+
+/* ---------------- gameplay ---------------- */
+let gpoll = null, gameSrc = "";
+function setGameStatus(text, pct){
+  $("#gstatus").textContent = text || "";
+  $("#gpbar").style.display = pct == null ? "none" : "block";
+  $("#gpbar div").style.width = (pct||0) + "%";
+}
+async function refreshGame(mode){   // mode: "start" | "new" | "poll"
+  const g = $("#game").value;
+  try { localStorage.setItem("game", g); } catch(e){}
+  clearTimeout(gpoll);
+  if (g === "custom"){
+    let {j} = await api("/api/gameplay?q=custom");
+    if (mode === "new" || (mode === "start" && j.state !== "ready")){
+      setGameStatus("Pick a video file…");
+      const r = await api("/api/pick-video");
+      ({j} = await api("/api/gameplay?q=custom"));
+      if (!r.j.ok && j.state !== "ready"){ setGameStatus("No video picked."); return; }
+    }
+    if (j.state === "ready"){ setBg(j.src + (mode === "new" ? "?t=" + Date.now() : "")); setGameStatus("Using " + j.name); }
+    else setGameStatus("Choose a video file with ↻.");
+    return;
+  }
+  const q = mode === "new" ? "&new=1" : mode === "start" ? "&start=1" : "";
+  const {j} = await api(`/api/gameplay?q=${g}${q}`);
+  if (j.have) setBg(j.src);
+  if (j.state === "busy"){
+    const msg = j.msg.includes("Downloading gameplay… ·") ? j.msg.replace("Downloading gameplay… ·", `Downloading gameplay… ${j.pct}% ·`) : j.msg + (j.pct ? ` ${j.pct}%` : "");
+    setGameStatus(msg, j.pct); gpoll = setTimeout(() => refreshGame("poll"), 800); }
+  else if (j.state === "error"){ setGameStatus(j.msg); }
+  else if (j.state === "ready"){ setGameStatus(""); }
+}
+function setBg(src){
+  if (src === gameSrc) return;
+  gameSrc = src; bg.src = src;
+  bg.onloadedmetadata = () => { if (bg.duration > 60) bg.currentTime = 5 + Math.random() * bg.duration * 0.75; if (!audio.paused || exporting) bg.play().catch(()=>{}); };
+}
+$("#game").onchange = () => refreshGame("start");
+$("#newvid").onclick = () => refreshGame("new");
+
+/* ---------------- captions ---------------- */
+const transcripts = {};      // id -> {words:[...], chunks:[...]} | {error}
+const tPending = {};
+let tQueue = Promise.resolve(), tWaiting = 0, tDone = 0;
+function getTranscript(m){
+  if (transcripts[m.id] && !transcripts[m.id].error) return Promise.resolve(transcripts[m.id]);
+  if (tPending[m.id]) return tPending[m.id];
+  tWaiting++; capStatus();
+  // one at a time: the recognizer works serially, and each can take a while on long messages
+  const p = tQueue.then(() => api("/api/transcript/" + m.id, 300000)).then(({j}) => {
+    if (j.words) j.chunks = chunkWords(j.words);
+    return j;
+  }).catch(e => ({error: e.name === "AbortError" ? "transcription took too long" : String(e)}))
+  .then(j => { transcripts[m.id] = j; delete tPending[m.id]; tWaiting--; tDone++; capStatus(j); return j; });
+  tQueue = p.catch(() => {});
+  return tPending[m.id] = p;
+}
+let capError = "";
+function capStatus(j){
+  if (j && j.error) capError = j.error === "denied"
+    ? "Captions need permission: System Settings › Privacy & Security › Speech Recognition › turn on Brainrot Voicemail, then relaunch."
+    : "Captions failed: " + j.error;
+  else if (j && j.words && !j.words.length) capError = "Captions: no speech recognized in that message.";
+  else if (j) capError = "";
+  $("#cstatus").textContent = tWaiting > 0 ? `Transcribing for captions… ${tWaiting} left` + (capError ? " · " + capError : "") : capError;
+}
+function chunkWords(words){
+  const out = []; let cur = [];
+  const flush = () => { if (cur.length){ out.push(cur); cur = []; } };
+  words.forEach((w, i) => {
+    const prev = words[i - 1];
+    if (prev && w.s - (prev.s + prev.d) > 0.6) flush();          // pause in speech
+    if (w.w.length >= 8){ flush(); out.push([w]); return; }       // long word stands alone
+    const chars = cur.reduce((a, x) => a + x.w.length + 1, 0) + w.w.length;
+    if (cur.length && chars > 12) flush();                         // keep each group short
+    cur.push(w);
+    if (cur.length >= 3 || /[.!?,;:]$/.test(w.w)) flush();
+  });
+  flush();
+  return out.map((ws, i) => {
+    const last = ws[ws.length - 1], next = out[i + 1];
+    const end = Math.min(next ? next[0].s : Infinity, last.s + last.d + 0.6);
+    return {words: ws, start: ws[0].s, end};
+  });
+}
+function drawCaption(g, W, H, u, vertical, msg, t){
+  if (!$("#caps").checked || !msg || t == null) return;
+  const tr = transcripts[msg.id]; if (!tr || !tr.chunks) return;
+  const ch = tr.chunks.find(c => t >= c.start && t < c.end); if (!ch) return;
+  const text = ch.words.map(w => w.w.toUpperCase());
+  const maxW = W * 0.88;
+  let size = (vertical ? 132 : 118) * u;
+  const setFont = () => g.font = `900 ${size}px -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif`;
+  setFont();
+  const space = () => g.measureText(" ").width;
+  let total = text.reduce((a, w) => a + g.measureText(w).width, 0) + space() * (text.length - 1);
+  while (total > maxW && size > 40 * u){ size -= 4 * u; setFont(); total = text.reduce((a, w) => a + g.measureText(w).width, 0) + space() * (text.length - 1); }
+  const age = t - ch.start, pop = age < 0.12 ? 0.82 + 0.18 * (age / 0.12) + Math.sin(age / 0.12 * Math.PI) * 0.06 : 1;
+  const cx = W / 2, cy = vertical ? H * 0.56 : H * 0.6;
+  const activeIdx = ch.words.filter(x => t >= x.s).length - 1;
+  g.save(); g.translate(cx, cy); g.scale(pop, pop);
+  g.textBaseline = "middle"; g.lineJoin = "round"; g.miterLimit = 2;
+  let x = -total / 2;
+  text.forEach((w, i) => {
+    const ww = g.measureText(w).width;
+    g.lineWidth = size * 0.16; g.strokeStyle = "#000"; g.strokeText(w, x, 0);
+    g.fillStyle = i === activeIdx ? "#ffd60a" : "#fff";
+    g.fillText(w, x, 0);
+    x += ww + space();
+  });
+  g.restore();
+}
+$("#caps").onchange = () => { try { localStorage.setItem("caps", $("#caps").checked ? "1" : "0"); } catch(e){}
+  if ($("#caps").checked) { reel.forEach(getTranscript); if (curMsg) getTranscript(curMsg); } else $("#cstatus").textContent = ""; };
+
+/* ---------------- renderer (preview + export share this) ---------------- */
+let outW = 1080, outH = 2340, previewScale = 0.5;
+function setFormat(){
+  [outW, outH] = FORMATS[$("#fmt").value];
+  const s = exporting ? 1 : previewScale;
+  stage.width = Math.round(outW * s); stage.height = Math.round(outH * s);
+  try { localStorage.setItem("fmt", $("#fmt").value); } catch(e){}
+}
+$("#fmt").onchange = setFormat;
+function rrect(g, x, y, w, h, r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function fitText(g, text, maxW, size, weight){
+  let s = size; g.font = `${weight} ${s}px -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif`;
+  while (g.measureText(text).width > maxW && s > size*0.5){ s -= 2; g.font = `${weight} ${s}px -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif`; }
+  if (g.measureText(text).width > maxW){ while (text.length > 1 && g.measureText(text + "…").width > maxW) text = text.slice(0,-1); text += "…"; }
+  return text;
+}
+const BARS = 40;
+/* s = {msg, idx, n, progress, levels (Float32Array BARS, 0..1), capT (seconds into clip or null)} */
+function drawScene(g, W, H, s){
+  const u = Math.min(W, H) / 1080, vertical = H > W;
+  g.fillStyle = "#000"; g.fillRect(0, 0, W, H);
+  if (bg.readyState >= 2 && bg.videoWidth){
+    const k = Math.max(W / bg.videoWidth, H / bg.videoHeight), w = bg.videoWidth * k, h = bg.videoHeight * k;
+    g.drawImage(bg, (W - w) / 2, (H - h) / 2, w, h);
+  } else {
+    g.fillStyle = "#555"; g.font = `600 ${36*u}px -apple-system, system-ui`; g.textAlign = "center";
+    g.fillText("Gameplay loading…", W/2, H/2); g.textAlign = "left";
+  }
+  let gr = g.createLinearGradient(0, 0, 0, H);
+  gr.addColorStop(0, "rgba(0,0,0,.45)"); gr.addColorStop(.25, "rgba(0,0,0,0)"); gr.addColorStop(.62, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,.65)");
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+
+  const m = s.msg;
+  const cw = vertical ? W * 0.86 : W * 0.42, ch = 170 * u, cx = vertical ? (W - cw) / 2 : 60 * u, cy = vertical ? H * 0.085 : 60 * u;
+  g.fillStyle = "rgba(18,20,26,.85)"; rrect(g, cx, cy, cw, ch, 36 * u); g.fill();
+  const name = m ? title(m) : "Pick a voice message", c = color(m ? m.sender : "?");
+  const ar = 52 * u, ax = cx + 40 * u + ar, ay = cy + ch / 2;
+  g.fillStyle = c; g.beginPath(); g.arc(ax, ay, ar, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = `700 ${40*u}px -apple-system, system-ui`;
+  g.fillText(initials(m ? m.sender : "?"), ax, ay + 2 * u);
+  g.textAlign = "left"; g.textBaseline = "alphabetic";
+  const tx = ax + ar + 30 * u, tmax = cx + cw - tx - 36 * u;
+  g.fillStyle = "#fff"; g.fillText(fitText(g, name, tmax, 56 * u, 800), tx, cy + ch / 2 - 4 * u);
+  g.fillStyle = "rgba(235,238,245,.75)";
+  const sub = m ? subtitle(m) + (s.n > 1 ? `   ·   ${s.idx + 1}/${s.n}` : "") : "";
+  g.fillText(fitText(g, sub, tmax, 32 * u, 500), tx, cy + ch / 2 + 42 * u);
+
+  const bw = vertical ? W * 0.8 : W * 0.5, bx = (W - bw) / 2, by = vertical ? H * 0.82 : H * 0.8, bh = 150 * u;
+  g.fillStyle = "rgba(255,255,255,.9)";
+  for (let i = 0; i < BARS; i++){
+    const v = s.levels[i], h = Math.max(10 * u, v * bh), w = bw / BARS * 0.55, x = bx + i * bw / BARS + (bw / BARS - w) / 2;
+    rrect(g, x, by - h / 2, w, h, w / 2); g.fill();
+  }
+  const py = by + bh / 2 + 50 * u;
+  g.fillStyle = "rgba(255,255,255,.25)"; rrect(g, bx, py, bw, 10 * u, 5 * u); g.fill();
+  g.fillStyle = "#fff"; rrect(g, bx, py, Math.max(10 * u, bw * Math.min(1, s.progress)), 10 * u, 5 * u); g.fill();
+  drawCaption(g, W, H, u, vertical, m, s.capT);
+}
+const liveLevels = new Float32Array(BARS);
+function draw(){
+  if (!exporting){
+    const playing = analyser && !audio.paused;
+    if (playing) analyser.getByteFrequencyData(vizData);
+    for (let i = 0; i < BARS; i++){
+      const mirror = i < BARS / 2 ? BARS / 2 - 1 - i : i - BARS / 2;
+      const v = playing ? vizData[Math.floor(2 + mirror * (vizData.length * 0.45) / (BARS / 2))] / 255 : 0;
+      liveLevels[i] = liveLevels[i] * 0.55 + v * 0.45;
+    }
+    drawScene(sctx, stage.width, stage.height, {msg: curMsg, idx: qi, n: reelMode ? queue.length : 1,
+      progress: audio.duration ? audio.currentTime / audio.duration : 0, levels: liveLevels, capT: curMsg ? audio.currentTime : null});
+  }
+  requestAnimationFrame(draw);
+}
+
+/* ---------------- export: rendered offline, faster than real time ---------------- */
+const LEAD = 0.6, GAP = 0.45, TAIL = 0.9, FPS = 30;
+function probeDurationP(m){
+  if (durations[m.id]) return Promise.resolve(durations[m.id]);
+  return new Promise(res => { const a = new Audio(); a.preload = "metadata"; a.src = "/audio/" + m.id;
+    a.onloadedmetadata = () => { durations[m.id] = a.duration; renderReel(); res(a.duration); a.src = ""; };
+    a.onerror = () => res(0); });
+}
+/* loudness envelope per frame from the decoded audio, used to animate the waveform */
+async function envelope(m){
+  const buf = await fetch("/audio/" + m.id).then(r => r.arrayBuffer());
+  const ab = await new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100).decodeAudioData(buf);
+  const data = ab.getChannelData(0), per = ab.sampleRate / FPS, n = Math.ceil(data.length / per), env = new Float32Array(n);
+  let peak = 1e-4;
+  for (let f = 0; f < n; f++){ let s = 0; const a = Math.floor(f * per), b = Math.min(data.length, Math.floor((f + 1) * per));
+    for (let i = a; i < b; i++) s += data[i] * data[i]; env[f] = Math.sqrt(s / Math.max(1, b - a)); peak = Math.max(peak, env[f]); }
+  for (let f = 0; f < n; f++) env[f] = Math.min(1, env[f] / peak * 1.15);
+  return env;
+}
+function levelsAt(env, t, out){
+  const f = Math.floor(t * FPS), a = env ? (env[f] || 0) : 0;
+  for (let i = 0; i < BARS; i++){
+    const center = 1 - Math.abs(i - (BARS - 1) / 2) / (BARS / 2);
+    const wob = 0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + f * 0.37) * Math.cos(i * 0.6 - f * 0.21));
+    const target = a * (0.35 + 0.65 * center) * wob;
+    out[i] = out[i] * 0.5 + target * 0.5;
+  }
+  return out;
+}
+
+/* minimal MP4 (H.264 video only); macOS adds the audio afterwards */
+function muxMP4(samples, avcC, W, H, fps){
+  const u32 = v => [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255], u16 = v => [(v >> 8) & 255, v & 255];
+  const str = s => [...s].map(c => c.charCodeAt(0));
+  const box = (type, ...parts) => { const body = parts.flat(Infinity); return [...u32(body.length + 8), ...str(type), ...body]; };
+  const full = (type, ver, flags, ...parts) => box(type, [ver, (flags >> 16) & 255, (flags >> 8) & 255, flags & 255], ...parts);
+  const matrix = [...u32(0x10000), ...u32(0), ...u32(0), ...u32(0), ...u32(0x10000), ...u32(0), ...u32(0), ...u32(0), ...u32(0x40000000)];
+  const N = samples.length, durMs = Math.round(N * 1000 / fps);
+  // presentation index per sample (handles B-frames via ctts)
+  const pts = samples.map(s => Math.round(s.ts * fps / 1e6));
+  let shift = 0; pts.forEach((p, i) => { shift = Math.max(shift, i - p); });
+  const cto = pts.map((p, i) => p - i + shift), needCtts = cto.some(v => v !== cto[0]) || shift > 0;
+  const ftyp = box("ftyp", str("isom"), u32(512), str("isom"), str("iso2"), str("avc1"), str("mp41"));
+  const total = samples.reduce((a, s) => a + s.data.length, 0);
+  const mdatHeader = [...u32(total + 8), ...str("mdat")];
+  const dataStart = ftyp.length + 8;
+  const stts = full("stts", 0, 0, u32(1), u32(N), u32(1));
+  const stss = full("stss", 0, 0, u32(samples.filter(s => s.key).length), samples.map((s, i) => s.key ? u32(i + 1) : []));
+  const stsz = full("stsz", 0, 0, u32(0), u32(N), samples.map(s => u32(s.data.length)));
+  const stsc = full("stsc", 0, 0, u32(1), u32(1), u32(N), u32(1));
+  const stco = full("stco", 0, 0, u32(1), u32(dataStart));
+  const ctts = needCtts ? full("ctts", 0, 0, u32(N), cto.map(v => [...u32(1), ...u32(v)])) : [];
+  const avc1 = box("avc1", [0,0,0,0,0,0], u16(1), new Array(16).fill(0), u16(W), u16(H), u32(0x480000), u32(0x480000), u32(0), u16(1),
+                   new Array(32).fill(0), u16(0x18), u16(0xffff), box("avcC", [...avcC]));
+  const stbl = box("stbl", full("stsd", 0, 0, u32(1), avc1), stts, ctts, stss, stsz, stsc, stco);
+  const minf = box("minf", full("vmhd", 0, 1, u16(0), u16(0), u16(0), u16(0)), box("dinf", full("dref", 0, 0, u32(1), full("url ", 0, 1))), stbl);
+  const mdia = box("mdia", full("mdhd", 0, 0, u32(0), u32(0), u32(fps), u32(N), u16(0x55c4), u16(0)),
+                   full("hdlr", 0, 0, u32(0), str("vide"), u32(0), u32(0), u32(0), str("VideoHandler"), [0]), minf);
+  const edts = shift > 0 ? box("edts", full("elst", 0, 0, u32(1), u32(durMs), u32(shift), u16(1), u16(0))) : [];
+  const trak = box("trak", full("tkhd", 0, 3, u32(0), u32(0), u32(1), u32(0), u32(durMs), u32(0), u32(0), u16(0), u16(0), u16(0), u16(0), matrix, u32(W << 16), u32(H << 16)), edts, mdia);
+  const moov = box("moov", full("mvhd", 0, 0, u32(0), u32(0), u32(1000), u32(durMs), u32(0x10000), u16(0x100), u16(0), u32(0), u32(0), matrix, new Array(24).fill(0), u32(2)), trak);
+  const parts = [new Uint8Array(ftyp), new Uint8Array(mdatHeader), ...samples.map(s => s.data), new Uint8Array(moov)];
+  return new Blob(parts, {type: "video/mp4"});
+}
+
+async function pickEncoder(W, H){
+  if (!window.VideoEncoder) return null;
+  for (const codec of ["avc1.42e034", "avc1.4d0034", "avc1.640034", "avc1.42e033", "avc1.640033", "avc1.640028"]){
+    const cfg = {codec, width: W, height: H, bitrate: 9_000_000, framerate: FPS, avc: {format: "avc"}, hardwareAcceleration: "prefer-hardware"};
+    try { const r = await VideoEncoder.isConfigSupported(cfg); if (r.supported) return r.config; } catch(e){}
+    try { delete cfg.hardwareAcceleration; const r = await VideoEncoder.isConfigSupported(cfg); if (r.supported) return r.config; } catch(e){}
+  }
+  return null;
+}
+const yieldNow = () => new Promise(r => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
+
+$("#export").onclick = async () => {
+  if (exporting) return;
+  const items = reel.length ? reel.slice() : (curMsg ? [curMsg] : []);
+  if (!items.length){ $("#estatus").textContent = "Add voice messages to the reel (+) or play one first."; return; }
+  if (!(bg.readyState >= 2)){ $("#estatus").textContent = "Gameplay video isn't ready yet."; return; }
+  const [W, H] = FORMATS[$("#fmt").value];
+  const encCfg = await pickEncoder(W, H);
+  if (!encCfg){ $("#estatus").textContent = "Fast export isn't supported here; recording in real time instead."; return exportRealtime(items); }
+  ensureAudioGraph();
+  audio.pause();
+  let cancelled = false; exporting = true;
+  $("#export").disabled = true; $("#rec").style.display = "flex"; $("#rectext").textContent = "Preparing…";
+  $("#cancel").onclick = () => { cancelled = true; };
+  const finish = msg => { exporting = false; $("#rec").style.display = "none"; $("#export").disabled = false; bg.pause(); bg.playbackRate = 1; setFormat(); $("#estatus").textContent = msg; };
+  try {
+    // 1. durations, captions, loudness envelopes
+    const durs = [], envs = [];
+    for (let i = 0; i < items.length && !cancelled; i++){
+      $("#rectext").textContent = `Preparing ${i + 1}/${items.length}…`;
+      durs.push(await probeDurationP(items[i]));
+      if ($("#caps").checked){ $("#rectext").textContent = `Transcribing ${i + 1}/${items.length}…`; await getTranscript(items[i]); }
+      try { envs.push(await envelope(items[i])); } catch(e){ envs.push(null); }
+    }
+    if (cancelled) return finish("Export cancelled.");
+    const segs = []; let t = LEAD;
+    items.forEach((m, i) => { const d = Math.max(0.1, durs[i] || 0); segs.push({m, at: t, dur: d, env: envs[i]}); t += d + (i < items.length - 1 ? GAP : 0); });
+    const T = t + TAIL, N = Math.ceil(T * FPS);
+
+    // 2. render + encode video frames as fast as possible
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const g = cv.getContext("2d");
+    const samples = []; let avcC = null, encErr = null;
+    const enc = new VideoEncoder({
+      output: (chunk, meta) => { if (meta && meta.decoderConfig && meta.decoderConfig.description) avcC = new Uint8Array(meta.decoderConfig.description);
+        const d = new Uint8Array(chunk.byteLength); chunk.copyTo(d); samples.push({data: d, ts: chunk.timestamp, key: chunk.type === "key"}); },
+      error: e => { encErr = e; }
+    });
+    enc.configure(encCfg);
+    bg.muted = true; bg.playbackRate = 1; await bg.play().catch(() => {});
+    const levels = new Float32Array(BARS); let lastSeg = 0;
+    const t0 = performance.now(); let tFrames = performance.now();
+    for (let f = 0; f < N && !cancelled && !encErr; f++){
+      const tt = f / FPS;
+      let si = segs.findIndex(s => tt >= s.at && tt < s.at + s.dur);
+      const inClip = si >= 0; if (!inClip) si = segs.findIndex(s => s.at > tt) - 1; if (si < 0) si = tt < LEAD ? 0 : segs.length - 1;
+      if (si !== lastSeg) { levels.fill(0); lastSeg = si; }
+      const s = segs[si], ct = tt - s.at;
+      levelsAt(inClip ? s.env : null, ct, levels);
+      drawScene(g, W, H, {msg: s.m, idx: si, n: segs.length, progress: Math.max(0, ct / s.dur), levels, capT: inClip ? ct : null});
+      const vf = new VideoFrame(cv, {timestamp: Math.round(tt * 1e6), duration: Math.round(1e6 / FPS)});
+      enc.encode(vf, {keyFrame: f % (FPS * 2) === 0}); vf.close();
+      while (enc.encodeQueueSize > 6) await yieldNow();
+      if (f % 15 === 14){
+        // keep the gameplay moving at the same pace as our frames, so it looks normal speed in the video
+        const now = performance.now(), fps = 15000 / Math.max(1, now - tFrames); tFrames = now;
+        bg.playbackRate = Math.max(0.25, Math.min(8, fps / FPS));
+        const pct = Math.floor(f / N * 100), el = (now - t0) / 1000, left = el / Math.max(1, f) * (N - f);
+        $("#rectext").textContent = `Rendering ${pct}% · ${fmt(left)} left`;
+      }
+      await yieldNow();
+    }
+    if (cancelled) { try { enc.close(); } catch(e){} return finish("Export cancelled."); }
+    await enc.flush(); enc.close();
+    if (encErr || !avcC || !samples.length) return finish("Video encoding failed: " + (encErr || "no output"));
+    bg.pause();
+
+    // 3. mux, then hand off to macOS to add the voice audio
+    $("#rectext").textContent = "Adding audio…";
+    const video = muxMP4(samples, avcC, W, H, FPS);
+    const plan = segs.map(s => `${s.m.id}:${s.at.toFixed(3)}:${s.dur.toFixed(3)}`).join(",");
+    const d = new Date(), pad = n => String(n).padStart(2, "0");
+    const who = items.length > 1 ? "Reel" : title(items[0]).replace(/[^A-Za-z0-9 ]/g, "").trim() || "Voice";
+    const name = `Brainrot ${who} ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}.${pad(d.getMinutes())}.${pad(d.getSeconds())}.mp4`;
+    const r = await fetch(`/api/compose?name=${encodeURIComponent(name)}&total=${T.toFixed(3)}&plan=${encodeURIComponent(plan)}`, {method: "POST", body: video});
+    const j = await r.json();
+    const secs = ((performance.now() - t0) / 1000).toFixed(0);
+    finish(j.path ? `Saved to Movies › Brainrot Voicemail › ${name} (took ${secs}s for a ${fmt(T)} video)` : "Export failed: " + (j.error || r.status));
+  } catch(e) { finish("Export failed: " + e); }
+};
+
+/* fallback when WebCodecs isn't available: record in real time */
+function playOnce(m){
+  return new Promise(resolve => {
+    const done = () => { audio.removeEventListener("ended", done); audio.removeEventListener("error", done); resolve(); };
+    cancelExport = () => { audio.pause(); done(); };
+    audio.addEventListener("ended", done); audio.addEventListener("error", done);
+    setNow(m); audio.src = "/audio/" + m.id; audio.play().catch(done);
+  });
+}
+async function exportRealtime(items){
+  const mime = window.MediaRecorder && ["video/mp4","video/webm"].find(t => MediaRecorder.isTypeSupported(t));
+  if (!mime || !stage.captureStream){ $("#estatus").textContent = "Video recording isn't supported on this version of macOS."; return; }
+  ensureAudioGraph(); await actx.resume();
+  if ($("#caps").checked) for (const m of items) await getTranscript(m);
+  exporting = true; let cancelled = false; audio.pause(); setFormat();
+  const dest = actx.createMediaStreamDestination(); analyser.connect(dest);
+  const stream = new MediaStream([...stage.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: 10_000_000});
+  const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const stopped = new Promise(r => rec.onstop = r);
+  $("#export").disabled = true; $("#rec").style.display = "flex";
+  const t0 = performance.now(); const tick = setInterval(() => $("#rectext").textContent = "Recording " + fmt((performance.now() - t0) / 1000), 250);
+  $("#cancel").onclick = () => { cancelled = true; cancelExport && cancelExport(); };
+  reelMode = items.length > 1; queue = items; bg.play().catch(()=>{});
+  const liveDraw = () => { if (!exporting) return; drawScene(sctx, stage.width, stage.height, {msg: curMsg, idx: qi, n: queue.length, progress: audio.duration ? audio.currentTime / audio.duration : 0, levels: liveLevels, capT: audio.currentTime}); requestAnimationFrame(liveDraw); };
+  liveDraw();
+  rec.start(1000); await sleep(600);
+  for (let i = 0; i < items.length && !cancelled; i++){ qi = i; await playOnce(items[i]); if (!cancelled) await sleep(450); }
+  rec.stop(); await stopped; clearInterval(tick); analyser.disconnect(dest);
+  exporting = false; $("#rec").style.display = "none"; $("#export").disabled = false; setFormat(); bg.pause();
+  if (cancelled){ $("#estatus").textContent = "Export cancelled."; return; }
+  const ext = mime.includes("mp4") ? "mp4" : "webm";
+  const name = `Brainrot ${Date.now()}.${ext}`;
+  const r = await fetch("/api/save?name=" + encodeURIComponent(name), {method: "POST", body: new Blob(chunks, {type: mime})});
+  const j = await r.json();
+  $("#estatus").textContent = j.path ? "Saved to Movies › Brainrot Voicemail › " + name : "Save failed: " + (j.error || r.status);
+}
+
+/* ---------------- boot ---------------- */
+try { const f = localStorage.getItem("fmt"); if (f && FORMATS[f]) $("#fmt").value = f;
+      const g = localStorage.getItem("game"); if (g) $("#game").value = g;
+      if (localStorage.getItem("caps") === "0") $("#caps").checked = false; } catch(e){}
+setFormat(); renderReel(); draw();
+load(false);
+refreshGame($("#game").value === "custom" ? "poll" : "start");
+</script></body></html>
