@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Brainrot Voicemail</title>
+<title>Brainrot Voice Memo</title>
 <style>
 :root{--bg:#0b0d10;--panel:#14171c;--panel2:#191d23;--line:#262a31;--text:#e9ecf1;--dim:#8b93a1;--blue:#0a84ff;--red:#ff453a}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
@@ -138,7 +138,7 @@ kbd{background:#232832;border-radius:4px;padding:1px 5px;font-size:11px}
     <label class="chk" style="justify-content:flex-start;margin-top:10px"><input type="checkbox" id="caps" checked> Captions (1–3 words at a time)</label>
     <div class="status" id="cstatus" style="margin-top:2px"></div>
     <div class="row" style="margin-top:10px"><button class="btn primary" id="export">⤓ Export video</button></div>
-    <div class="status" id="estatus">Exports the reel (or the current message) to Movies › Brainrot Voicemail. Renders faster than real time.</div>
+    <div class="status" id="estatus">Exports the reel (or the current message) to Movies › Brainrot Voice Memo. Renders faster than real time.</div>
   </div>
 </div>
 </div>
@@ -173,7 +173,7 @@ function fdaScreen(){
   showOverlay(`<h2>One-time permission</h2>
     macOS keeps iMessage private, so this app needs <b>Full Disk Access</b> to read your voice messages.
     <ol><li>Click <b>Open Settings</b> below</li>
-    <li>Turn on <b>Brainrot Voicemail</b> in the list<br><span style="font-size:12px">Not listed? Click <b>+</b> and pick the app (<b>Show App</b> finds it)</span></li>
+    <li>Turn on <b>Brainrot Voice Memo</b> in the list<br><span style="font-size:12px">Not listed? Click <b>+</b> and pick the app (<b>Show App</b> finds it)</span></li>
     <li>Choose <b>Quit &amp; Reopen</b> if macOS asks, or click <b>Relaunch</b> here</li></ol>
     <div class="row"><button class="btn primary" onclick="api('/api/open-fda')">Open Settings</button>
     <button class="btn" onclick="api('/api/reveal')">Show App</button>
@@ -186,7 +186,7 @@ async function load(refresh){
   let ok, status, j;
   try { ({ok, status, j} = await api("/api/messages" + (refresh ? "?refresh=1" : ""), 60000)); }
   catch(e) { $("#count").textContent = "Not responding";
-    return showOverlay(`<h2>The app's background service isn't responding</h2>Quit Brainrot Voicemail (⌘Q) and open it again.
+    return showOverlay(`<h2>The app's background service isn't responding</h2>Quit Brainrot Voice Memo (⌘Q) and open it again.
       If that doesn't help, restart your Mac.<div class="row" style="margin-top:16px"><button class="btn" onclick="load(true)">Try again</button></div>`); }
   if (status === 403){ $("#count").textContent = "Waiting for permission"; return fdaScreen(); }
   if (!ok){ $("#count").textContent = "Error"; return showOverlay(`<h2>Couldn't read Messages</h2>${esc(j.error||"Unknown error")}`); }
@@ -358,7 +358,7 @@ function getTranscript(m){
   if (tPending[m.id]) return tPending[m.id];
   tWaiting++; capStatus();
   // one at a time: the recognizer works serially, and each can take a while on long messages
-  const p = tQueue.then(() => api("/api/transcript/" + m.id, 300000)).then(({j}) => {
+  const p = tQueue.then(() => api("/api/transcript/" + m.id, 1300000)).then(({j}) => {
     if (j.words) j.chunks = chunkWords(j.words);
     return j;
   }).catch(e => ({error: e.name === "AbortError" ? "transcription took too long" : String(e)}))
@@ -369,7 +369,7 @@ function getTranscript(m){
 let capError = "";
 function capStatus(j){
   if (j && j.error) capError = j.error === "denied"
-    ? "Captions need permission: System Settings › Privacy & Security › Speech Recognition › turn on Brainrot Voicemail, then relaunch."
+    ? "Captions need permission: System Settings › Privacy & Security › Speech Recognition › turn on Brainrot Voice Memo, then relaunch."
     : "Captions failed: " + j.error;
   else if (j && j.words && !j.words.length) capError = "Captions: no speech recognized in that message.";
   else if (j) capError = "";
@@ -649,7 +649,7 @@ $("#export").onclick = async () => {
     const r = await fetch(`/api/compose?name=${encodeURIComponent(name)}&total=${T.toFixed(3)}&plan=${encodeURIComponent(plan)}`, {method: "POST", body: video});
     const j = await r.json();
     const secs = ((performance.now() - t0) / 1000).toFixed(0);
-    finish(j.path ? `Saved to Movies › Brainrot Voicemail › ${name} (took ${secs}s for a ${fmt(T)} video)` : "Export failed: " + (j.error || r.status));
+    finish(j.path ? `Saved to Movies › Brainrot Voice Memo › ${name} (took ${secs}s for a ${fmt(T)} video)` : "Export failed: " + (j.error || r.status));
   } catch(e) { finish("Export failed: " + e); }
 };
 
@@ -688,7 +688,7 @@ async function exportRealtime(items){
   const name = `Brainrot ${Date.now()}.${ext}`;
   const r = await fetch("/api/save?name=" + encodeURIComponent(name), {method: "POST", body: new Blob(chunks, {type: mime})});
   const j = await r.json();
-  $("#estatus").textContent = j.path ? "Saved to Movies › Brainrot Voicemail › " + name : "Save failed: " + (j.error || r.status);
+  $("#estatus").textContent = j.path ? "Saved to Movies › Brainrot Voice Memo › " + name : "Save failed: " + (j.error || r.status);
 }
 
 /* ---------------- boot ---------------- */

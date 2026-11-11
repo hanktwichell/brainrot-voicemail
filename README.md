@@ -1,4 +1,4 @@
-# brainrot-voicemail
+# brainrot-voicemail (Brainrot Voice Memo)
 
 Mac app that turns iMessage voice messages into brainrot videos: your friends' voice messages played over Subway Surfers or Minecraft parkour gameplay, with 1-3 word captions, exported as an iPhone-ready MP4.
 
@@ -15,12 +15,12 @@ Mac app that turns iMessage voice messages into brainrot videos: your friends' v
 
 ## Install
 
-1. Download `Brainrot-Voicemail-mac.zip` from Releases (or build it, below), unzip, and move the app to Applications.
+1. Download `Brainrot-Voice-Memo-mac.zip` from Releases (or build it, below), unzip, and move the app to Applications.
 2. Open it. macOS blocks it the first time because it isn't notarized: System Settings > Privacy & Security > Open Anyway.
 3. Grant Full Disk Access when the app asks (needed to read `~/Library/Messages/chat.db`), then Relaunch.
 4. Allow Speech Recognition the first time captions run.
 
-Requires macOS 11+, Apple Silicon or Intel. Exports land in `~/Movies/Brainrot Voicemail/`.
+Requires macOS 11+, Apple Silicon or Intel. Exports land in `~/Movies/Brainrot Voice Memo/`.
 
 ## How it works
 
@@ -42,7 +42,7 @@ The build runs on Linux (or macOS) with clang and lld. No macOS SDK is needed: t
 
 ```sh
 python3 build.py
-# -> out/Brainrot Voicemail.app and out/Brainrot-Voicemail-mac.zip
+# -> out/Brainrot Voice Memo.app and out/Brainrot-Voice-Memo-mac.zip
 ```
 
 Requirements: `clang` (18+), `ld64.lld-18`, `llvm-lipo-18`, `llvm-nm`, Python 3, `zip`.

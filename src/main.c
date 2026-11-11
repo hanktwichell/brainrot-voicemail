@@ -1,5 +1,5 @@
 /*
- * Brainrot Voicemail — native macOS app.
+ * Brainrot Voice Memo — native macOS app.
  * Native shell: NSWindow + WKWebView (via the Objective-C runtime).
  * Backend: in-process HTTP server on 127.0.0.1 that reads iMessage voice
  * messages from chat.db (sqlite3), converts them with the built-in afconvert,
@@ -533,7 +533,7 @@ static char *recognize(const char *audio_path, bool on_device) {
     if (responds(req, "setAddsPunctuation:")) mB(req, "setAddsPunctuation:", true);
     TCtx *c = calloc(1, sizeof *c); c->sema = dispatch_semaphore_create(0);
     ((id (*)(id, SEL, id, void *))objc_msgSend)(rec, S("recognitionTaskWithRequest:resultHandler:"), req, mkblock((void *)on_result, c));
-    long timed_out = dispatch_semaphore_wait(c->sema, dispatch_time(0, 120LL * 1000000000LL));
+    long timed_out = dispatch_semaphore_wait(c->sema, dispatch_time(0, 600LL * 1000000000LL));
     char *out = 0;
     os_unfair_lock_lock(&c->lock);
     if (!timed_out && c->json) out = strdup(c->json);
@@ -852,7 +852,7 @@ static const char *header_value(char *headers, const char *name) {
     return 0;
 }
 
-/* POST /api/save?name=... : stream the request body to ~/Movies/Brainrot Voicemail/<name> */
+/* POST /api/save?name=... : stream the request body to ~/Movies/Brainrot Voice Memo/<name> */
 static void save_upload(int fd, const char *query, char *headers, const char *body, size_t have) {
     char raw[200], name[200]; qparam(query, "name", raw, sizeof raw);
     size_t n = 0;
@@ -864,7 +864,7 @@ static void save_upload(int fd, const char *query, char *headers, const char *bo
     const char *cl = header_value(headers, "Content-Length");
     long long total = 0; for (const char *c = cl; c && *c >= '0' && *c <= '9'; c++) total = total * 10 + (*c - '0');
     char *mov = cat3(HOME, "/Movies", ""); mkdir(mov, 0755);
-    char *dir = cat3(mov, "/Brainrot Voicemail", ""); mkdir(dir, 0755);
+    char *dir = cat3(mov, "/Brainrot Voice Memo", ""); mkdir(dir, 0755);
     char *full = cat3(dir, "/", name);
     FILE *f = fopen(full, "wb");
     if (!f) { free(mov); free(dir); free(full); return respond_json(fd, 500, "{\"error\":\"Couldn't write to Movies folder\"}"); }
@@ -1010,7 +1010,7 @@ static void compose_upload(int fd, const char *query, char *headers, const char 
     if (got < want) { unlink(video); free(video); return respond_json(fd, 500, "{\"error\":\"upload interrupted\"}"); }
 
     char *mov = cat3(HOME, "/Movies", ""); mkdir(mov, 0755);
-    char *dir = cat3(mov, "/Brainrot Voicemail", ""); mkdir(dir, 0755);
+    char *dir = cat3(mov, "/Brainrot Voice Memo", ""); mkdir(dir, 0755);
     char *full = cat3(dir, "/", name);
     char *err = compose_video(video, items, ni, total, full);
     Buf j = {0};
@@ -1163,7 +1163,7 @@ int bv_test_main(void) {
     CACHE = cat3(HOME, "/Library/Caches/BrainrotVoicemail", "");
     SUPPORT = cat3(HOME, "/Library/Application Support/BrainrotVoicemail", "");
     mkdirs();
-    snprintf(BUNDLE, sizeof BUNDLE, "/tmp/Brainrot Voicemail.app");
+    snprintf(BUNDLE, sizeof BUNDLE, "/tmp/Brainrot Voice Memo.app");
     int port = start_server();
     snprintf(BUNDLE, sizeof BUNDLE, "%d", port); write(1, BUNDLE, strlen(BUNDLE)); write(1, "\n", 1);
     for (;;) sleep(1000);
@@ -1188,10 +1188,10 @@ static void did_finish(id self, SEL _cmd, id note) {
     id app = m0(C("NSApplication"), "sharedApplication");
 
     id bar = NEW("NSMenu");
-    id am = submenu(bar, "Brainrot Voicemail");
-    m1(am, "addItem:", menu_item("Hide Brainrot Voicemail", "hide:", "h"));
+    id am = submenu(bar, "Brainrot Voice Memo");
+    m1(am, "addItem:", menu_item("Hide Brainrot Voice Memo", "hide:", "h"));
     m1(am, "addItem:", m0(C("NSMenuItem"), "separatorItem"));
-    m1(am, "addItem:", menu_item("Quit Brainrot Voicemail", "terminate:", "q"));
+    m1(am, "addItem:", menu_item("Quit Brainrot Voice Memo", "terminate:", "q"));
     id em = submenu(bar, "Edit");
     m1(em, "addItem:", menu_item("Cut", "cut:", "x"));
     m1(em, "addItem:", menu_item("Copy", "copy:", "c"));
@@ -1207,7 +1207,7 @@ static void did_finish(id self, SEL _cmd, id note) {
     CGRect r = {0, 0, 1240, 780};
     id win = ((id (*)(id, SEL, CGRect, unsigned long, unsigned long, bool))objc_msgSend)(
         m0(C("NSWindow"), "alloc"), S("initWithContentRect:styleMask:backing:defer:"), r, 1 | 2 | 4 | 8, 2, false);
-    m1(win, "setTitle:", NS("Brainrot Voicemail"));
+    m1(win, "setTitle:", NS("Brainrot Voice Memo"));
     ((void (*)(id, SEL, CGSize))objc_msgSend)(win, S("setMinSize:"), (CGSize){900, 560});
     m1(win, "setAppearance:", m1(C("NSAppearance"), "appearanceNamed:", NS("NSAppearanceNameDarkAqua")));
     m1(win, "setBackgroundColor:", m0(C("NSColor"), "blackColor"));

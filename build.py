@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""Cross-builds 'Brainrot Voicemail.app' (universal arm64 + x86_64), signs it ad-hoc, and zips it."""
+"""Cross-builds 'Brainrot Voice Memo.app' (universal arm64 + x86_64), signs it ad-hoc, and zips it."""
 import base64, hashlib, os, shutil, subprocess, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import sign
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "out")
-APP = os.path.join(OUT, "Brainrot Voicemail.app")
+APP = os.path.join(OUT, "Brainrot Voice Memo.app")
 EXE = "BrainrotVoicemail"
 IDENT = "com.hank.brainrotvoicemail"
-VERSION = "1.3"
+VERSION = "1.3.1"
 
 INFO_PLIST = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key><string>en</string>
-	<key>CFBundleDisplayName</key><string>Brainrot Voicemail</string>
+	<key>CFBundleDisplayName</key><string>Brainrot Voice Memo</string>
 	<key>CFBundleExecutable</key><string>{EXE}</string>
 	<key>CFBundleIconFile</key><string>AppIcon</string>
 	<key>CFBundleIdentifier</key><string>{IDENT}</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-	<key>CFBundleName</key><string>Brainrot Voicemail</string>
+	<key>CFBundleName</key><string>Brainrot Voice Memo</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>{VERSION}</string>
 	<key>CFBundleVersion</key><string>1</string>
@@ -29,7 +29,7 @@ INFO_PLIST = f"""<?xml version="1.0" encoding="UTF-8"?>
 	<key>LSMinimumSystemVersion</key><string>11.0</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSPrincipalClass</key><string>NSApplication</string>
-	<key>NSSpeechRecognitionUsageDescription</key><string>Brainrot Voicemail transcribes your voice messages on this Mac to make captions.</string>
+	<key>NSSpeechRecognitionUsageDescription</key><string>Brainrot Voice Memo transcribes your voice messages on this Mac to make captions.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key><true/>
@@ -129,8 +129,8 @@ def main():
     sh("llvm-lipo-18", "-create", *slices, "-output", exe)
     os.chmod(exe, 0o755)
 
-    zipname = "Brainrot-Voicemail-mac.zip"
-    subprocess.run(["zip", "-qry", os.path.join(OUT, zipname), "Brainrot Voicemail.app"], check=True, cwd=OUT)
+    zipname = "Brainrot-Voice-Memo-mac.zip"
+    subprocess.run(["zip", "-qry", os.path.join(OUT, zipname), "Brainrot Voice Memo.app"], check=True, cwd=OUT)
     print("built", os.path.join(OUT, zipname))
 
 
